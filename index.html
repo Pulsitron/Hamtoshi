@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HAMTOSHI — Samurai Hamster</title>
+  <meta name="description" content="Small paws. Big discipline. The samurai hamster memecoin — slice FUD, guard the village, join the dojo." />
+  <meta name="theme-color" content="#ff2e35" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --wrap:860px; --ink:#eef1f6; --muted:#9aa3ad; --accent:#ff2e35; --accent2:#43d9ff;
+      --card:rgba(255,255,255,.05); --ghost:rgba(255,255,255,.03); --border:rgba(255,255,255,.12);
+      --nav-pad: 14px; /* inner padding used to compute height */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:#000}
+    a{color:inherit; text-decoration:none}
+
+    /* BACKGROUND COLUMN (video + still) */
+    .bg-col{position:fixed; inset:0; display:grid; place-items:center; pointer-events:none; z-index:0}
+    .bg-frame{position:relative; width:min(100%, var(--wrap)); height:100%}
+    .bg-img{position:absolute; inset:0; background:url('background.png') center/cover no-repeat;}
+    .bg-vid{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+    .shade{position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(0,0,0,.25), rgba(0,0,0,.7) 65%, rgba(0,0,0,.92) 100%)}
+
+    /* CONTENT WRAPPER */
+    .wrap{position:relative; max-width:var(--wrap); margin:0 auto; padding:28px}
+
+    /* FIXED NAV (always on top) */
+    .site-nav{position:fixed; top:0; left:0; right:0; z-index:10000}
+    .site-nav .wrap{padding: var(--nav-pad) 28px}
+    .site-nav .inner{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; background:rgba(0,0,0,.35); border:1px solid var(--border); border-radius:14px; backdrop-filter:blur(8px)}
+    .brand{display:flex; align-items:center; gap:10px}
+    .brand img{width:32px; height:32px; border-radius:10px}
+    .chip{padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.05); color:var(--muted); font-weight:600}
+
+    /* push page content below fixed nav */
+    main{padding-top: calc( (var(--nav-pad)*2) + 10px + 16px + 2px + 28px );}
+    /* ^ (top wrap padding x2) + inner content (10px top + 16px vertical padding + 2px borders) + a little breathing space (28px) */
+
+    /* HERO */
+    .hero{padding:40px 0 24px; text-align:center}
+    .logo{width:min(36vw, 320px); height:auto; border-radius:26px; background:#000; padding:12px; box-shadow:0 18px 40px rgba(67,217,255,.28); margin:0 auto 12px}
+    h1{font-size:clamp(34px,5vw,56px); line-height:1.04; margin:12px 0 8px; font-weight:900}
+    .sub{color:var(--muted); font-size:clamp(14px,1.6vw,18px)}
+
+    /* BUTTON STACK */
+    .stack{margin:18px auto 0; width:min(720px,100%); display:grid; gap:12px}
+    .btn{display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 18px; border-radius:16px; border:1px solid var(--border); background:var(--card); font-weight:800}
+    .btn.primary{background:linear-gradient(90deg, var(--accent), #ff7b3d); border-color:transparent; box-shadow:0 14px 30px rgba(255,46,53,.35)}
+    .btn.glow{border-color:transparent; background:linear-gradient(90deg, var(--accent2), #7af3ff); box-shadow:0 12px 26px rgba(67,217,255,.36)}
+
+    /* CONTRACT */
+    .contract{margin:22px auto 0; width:min(720px,100%); display:flex; align-items:center; gap:10px; border:1px dashed var(--border); background:var(--ghost); border-radius:16px; padding:12px 14px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace}
+    .addr{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .copy{margin-left:auto; cursor:pointer; padding:10px 12px; border-radius:10px; border:1px dashed var(--border); color:var(--accent2); font-weight:800}
+
+    /* PANELS */
+    section{padding:20px 0}
+    .panel{margin:10px auto; width:min(860px,100%); background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px}
+    .panel h2{margin:0 0 8px; font-size:22px}
+    .muted{color:var(--muted)}
+
+    /* FOOTER */
+    footer{padding:40px 0; color:var(--muted); text-align:center}
+    .chips{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+
+    /* INITIAL REVEAL — hidden until splash finishes */
+    body:not(.show) .hero .logo,
+    body:not(.show) h1,
+    body:not(.show) .sub,
+    body:not(.show) .stack,
+    body:not(.show) .contract,
+    body:not(.show) .panel{opacity:0; transform:translateY(6px)}
+    body.show .hero .logo,
+    body.show h1,
+    body.show .sub,
+    body.show .stack,
+    body.show .contract,
+    body.show .panel{opacity:1; transform:none; transition:opacity .45s ease, transform .45s ease}
+
+    /* SPLASH */
+    .splash{position:fixed; inset:0; z-index:100000; display:grid; place-items:center; background:#000; transition:opacity .5s ease, visibility .5s ease}
+    .splash.hide{opacity:0; visibility:hidden; pointer-events:none}
+    .splash-inner{display:flex; flex-direction:column; align-items:center; gap:18px; text-align:center}
+    .splash-video{max-width:min(520px,90vw); border-radius:16px; box-shadow:0 18px 60px rgba(0,0,0,.6)}
+    .enter{cursor:pointer; padding:14px 18px; border-radius:999px; border:1px solid rgba(255,255,255,.15); background:linear-gradient(90deg,#ff2e35,#ff7b3d); color:#fff; font-weight:900}
+
+    /* Slideshow (small previews) */
+    .carousel{position:relative; width:min(400px, 100%); margin:0 auto; overflow:hidden; border-radius:18px}
+    .carousel-track{display:flex; transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+    .carousel-track img{flex:0 0 100%; width:100%; aspect-ratio:1/1; object-fit:cover; background:#0b0b0e}
+    .car-btn{position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:32px; height:32px; border-radius:999px; border:1px solid var(--border); background:rgba(0,0,0,.45); color:#fff; font-size:18px; line-height:30px; text-align:center; cursor:pointer; backdrop-filter:blur(6px)}
+    .car-btn.prev{left:8px} .car-btn.next{right:8px}
+    .car-dots{position:absolute; inset:auto 0 8px; display:flex; justify-content:center; gap:8px}
+    .car-dots button{width:8px; height:8px; border-radius:50%; border:none; background:rgba(255,255,255,.35)}
+    .car-dots button.active{background:#fff}
+
+    /* Mobile tweaks */
+    @media (max-width: 860px){
+      :root{ --wrap:92vw }
+      .site-nav .wrap{ padding: var(--nav-pad) 16px }
+      .nav .inner{ padding:8px 12px }
+      .chip{ font-size:12px; padding:8px 10px }
+      .logo{ width:min(58vw, 280px); border-radius:22px; padding:10px }
+      h1{ font-size:clamp(26px, 6vw, 40px) }
+      .sub{ font-size:clamp(13px, 3.8vw, 16px) }
+      .stack{ gap:10px }
+      .btn{ padding:14px 16px; border-radius:14px }
+      .contract{ padding:10px 12px; border-radius:14px }
+      .contract .addr{ font-size:12px; max-width:58vw }
+      .copy{ padding:9px 12px }
+      .panel{ padding:16px }
+      .bg-frame{ width:100% }
+      .splash-video{ max-width:92vw }
+    }
+    @media (max-width: 420px){
+      .chip{ font-size:11px; padding:7px 9px }
+      .btn{ padding:12px 14px }
+      .contract .addr{ max-width:54vw }
+    }
+  </style>
+</head>
+<body>
+  <!-- SPLASH / LOAD PAGE -->
+  <div id="splash" class="splash" role="dialog" aria-modal="true" aria-label="Welcome">
+    <div class="splash-inner">
+      <video id="intro" class="splash-video" style="display:none" playsinline muted preload="auto"></video>
+      <button id="enter" class="enter">Enter Dojo</button>
+    </div>
+  </div>
+
+  <!-- Background column -->
+  <div class="bg-col" aria-hidden="true">
+    <div class="bg-frame">
+      <div class="bg-img"></div>
+      <video id="bgvid" class="bg-vid" src="background.mp4" poster="background.png" autoplay muted loop playsinline></video>
+      <div class="shade"></div>
+    </div>
+  </div>
+
+  <!-- FIXED NAV -->
+  <header class="site-nav">
+    <div class="wrap nav">
+      <div class="inner">
+        <div class="brand">
+          <img src="hamtoshi-head.png" alt="Hamtoshi" />
+          <b>HAMTOSHI</b>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="chip" href="#tokenomics">Tokenomics</a>
+          <a class="chip" href="#lore">Lore</a>
+          <a class="chip" href="#mint">Mint</a>
+          <a class="chip" href="#faq">FAQ</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <header class="wrap hero">
+      <img class="logo" src="hamtoshi-full.png" alt="Hamtoshi full" />
+      <div class="contract mono" style="margin-top:14px">
+        <span>Contract</span>
+        <span id="addr" class="addr">0x3180BDf814CB1601ae72E9314a7663A08A3360b8</span>
+        <button id="copy" class="copy">Copy</button>
+      </div>
+      <h1>Small paws. Big discipline.</h1>
+      <p class="sub">The samurai hamster of crypto. Slice FUD. Guard the village. Join the dojo.</p>
+
+      <div class="stack">
+        <a id="buy"   class="btn primary" href="#" target="_blank" rel="noopener noreferrer">Buy on Uniswap</a>
+        <a id="chart" class="btn glow"    href="#" target="_blank" rel="noopener noreferrer">View Chart</a>
+        <a id="tg"    class="btn"         href="#" target="_blank" rel="noopener noreferrer">Telegram</a>
+        <a id="x"     class="btn"         href="#" target="_blank" rel="noopener noreferrer">X / Twitter</a>
+      </div>
+    </header>
+
+    <!-- PANELS -->
+    <section id="lore" class="wrap">
+      <div class="panel">
+        <h2>Code of the Wheel-Samurai</h2>
+        <p class="muted">
+          Born in the Dojo of the Spinning Wheel, Hamtoshi trained under quiet moons to master Bushido for the modern battlefield: the markets.<br>
+          He learned to cut through noise with a single strike and to wait—paw steady—until the perfect entry.<br>
+          When the red moon rose, he took an oath to defend small holders and hunt dishonour on the chain.
+        </p>
+      </div>
+    </section>
+
+    <section id="tokenomics" class="wrap">
+      <div class="panel">
+        <h2>Tokenomics</h2>
+        <ul class="muted">
+          <li><b>Total Supply</b>: <span class="mono">1,000,000,000 $HAM</span></li>
+          <li><b>Buy/Sell Tax</b>: 0% / 0%</li>
+          <li><b>Liquidity</b>: <a href="https://lock.gopluslabs.io/lock/detail/v3/8453/3375" target="_blank" rel="noopener noreferrer">Locked (view here)</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- GALLERY (slideshow) -->
+    <section id="gallery" class="wrap">
+      <div class="panel">
+        <h2 style="margin-bottom:12px">Hamtoshi NFT Preview</h2>
+        <div class="carousel" aria-label="Hamtoshi NFT slideshow">
+          <div class="carousel-track" id="carouselTrack">
+            <img src="1.png"  alt="Hamtoshi NFT 1"  loading="lazy">
+            <img src="2.png"  alt="Hamtoshi NFT 2"  loading="lazy">
+            <img src="4.png"  alt="Hamtoshi NFT 3"  loading="lazy">
+            <img src="5.png"  alt="Hamtoshi NFT 4"  loading="lazy">
+            <img src="6.png"  alt="Hamtoshi NFT 5"  loading="lazy">
+            <img src="22.png" alt="Hamtoshi NFT 6"  loading="lazy">
+            <img src="27.png" alt="Hamtoshi NFT 7"  loading="lazy">
+            <img src="32.png" alt="Hamtoshi NFT 8"  loading="lazy">
+            <img src="46.png" alt="Hamtoshi NFT 9"  loading="lazy">
+          </div>
+          <button class="car-btn prev" id="carPrev" aria-label="Previous slide">‹</button>
+          <button class="car-btn next" id="carNext" aria-label="Next slide">›</button>
+          <div class="car-dots" id="carDots" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MINT WIDGET -->
+    <section id="mint" class="wrap">
+      <div class="panel">
+        <h2>Mint Hamtoshi NFT</h2>
+        <iframe id='iframe-widget' src='https://0x9d28de249b3a2f32db5b155088dff9eeec9b3bd3_8453.nfts2.me/?widget=classic&bgColor=000000' style="height: 300px; width: 100%; border: 0px solid #000000;border-radius: 15px"></iframe>
+      </div>
+    </section>
+
+    <section id="faq" class="wrap">
+      <div class="panel">
+        <h2>FAQ</h2>
+        <p class="muted">
+          <b>What is Hamtoshi?</b><br> The samurai hamster of crypto. Tiny paws, big discipline. He slices FUD, guards holders, and squeaks “wagmi” at the red moon.<br><br>
+          <b>How do I buy?</b><br> Grab some ETH on Base, open Uniswap, paste the contract, swap, and keep a little ETH for gas. Boom—you now own a pocket-sized sensei. (Meditation optional, diamond paws encouraged.)<br><br>
+          <b>Is this financial advice?</b><br> Nah. Hamtoshi can cut through noise, not your risk profile. Do your own research, pet your inner hamster, and only bet what your snack budget can handle.
+        </p>
+      </div>
+    </section>
+
+   <footer>
+    <footer class="wrap">
+    <div class="chips">
+        <a class="link-pill" href="https://t.me/TheWheelSamurai" target="_blank" rel="noopener noreferrer"><img src="./TG.png" alt="Telegram"></a>
+        <a class="link-pill" href="https://dexscreener.com/base/0x3c85622f948131dcb4753895f3ef685437b6c506" target="_blank" rel="noopener noreferrer"><img src="./DS.png" alt="Dexscreener"></a>
+        <a class="link-pill" href="https://x.com/TheWheelSamurai" target="_blank" rel="noopener noreferrer"><img src="./X.png" alt="X"></a>
+        <a class="link-pill" href="https://app.uniswap.org/swap?outputCurrency=0x3180BDf814CB1601ae72E9314a7663A08A3360b8&chain=base" target="_blank" rel="noopener noreferrer"><img src="./Uni.png" alt="Uniswap"></a>
+      </div>
+    <p style="margin-top:12px">© <span id="year"></span> Hamtoshi. All vibes reserved. 🐹⚔️</p>
+    </div>
+  </footer>
+  </main>
+
+  <script>
+    // Links
+    const LINKS = {
+      buy: 'https://app.uniswap.org/swap?outputCurrency=0x3180BDf814CB1601ae72E9314a7663A08A3360b8&chain=base',
+      chart: 'https://dexscreener.com/base/0x3c85622f948131dcb4753895f3ef685437b6c506',
+      telegram: 'https://t.me/TheWheelSamurai',
+      twitter: 'https://x.com/TheWheelSamurai'
+    };
+    const $ = (id)=>document.getElementById(id);
+    const set = (id,url)=>{ const el=$(id); if(el && url) el.href=url };
+    set('buy', LINKS.buy); set('fbuy', LINKS.buy);
+    set('chart', LINKS.chart); set('fchart', LINKS.chart);
+    set('tg', LINKS.telegram); set('ftg', LINKS.telegram);
+    set('x', LINKS.twitter); set('fx', LINKS.twitter);
+    const yr = document.getElementById('year'); if(yr) yr.textContent = new Date().getFullYear();
+
+    // Copy contract
+    const copyBtn = $('copy');
+    copyBtn?.addEventListener('click', async ()=>{
+      const text = $('addr').innerText.trim();
+      try{ await navigator.clipboard.writeText(text) }catch(e){
+        const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      const old=copyBtn.textContent; copyBtn.textContent='Copied! ✅'; copyBtn.style.borderColor='var(--accent2)';
+      setTimeout(()=>{ copyBtn.textContent=old; copyBtn.style.borderColor='var(--border)'; }, 1400);
+    });
+
+    // Splash flow
+    (function(){
+      const splash = $('splash');
+      const btn = $('enter');
+      const intro = $('intro');
+      const bgvid = $('bgvid');
+      function openSite(){
+        splash.classList.add('hide');
+        document.body.classList.add('show');
+        if(bgvid){ try{ bgvid.play().catch(()=>{}); }catch(e){} }
+      }
+      btn?.addEventListener('click', async ()=>{
+        btn.style.display='none';
+        intro.src='load.mp4';
+        intro.style.display='block';
+        intro.currentTime = 0; intro.muted = true; intro.setAttribute('playsinline','');
+        intro.addEventListener('ended', openSite, { once:true });
+        try{ await intro.play(); }catch(e){
+          intro.addEventListener('click', async ()=>{ try{ await intro.play(); }catch(_){} }, { once:true });
+        }
+      });
+    })();
+
+    // Scroll reveal
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          e.target.animate([{opacity:.0, transform:'translateY(8px)'},{opacity:1, transform:'translateY(0)'}],{
+            duration:600, easing:'cubic-bezier(.2,.7,.2,1)', fill:'both'
+          });
+          io.unobserve(e.target);
+        }
+      })
+    },{threshold:.12});
+    document.querySelectorAll('.panel, .hero h1, .hero .sub, .stack, .contract, .hero .logo').forEach(n=>io.observe(n));
+
+    // Mobile/low-data: prefer still background
+    (function(){
+      const bgvid = document.getElementById('bgvid');
+      const isSmall = window.matchMedia && window.matchMedia('(max-width: 860px)').matches;
+      const conn = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+      const saveData = conn && conn.saveData;
+      if(bgvid && (saveData || isSmall)){
+        try{ bgvid.pause(); }catch(e){}
+        bgvid.removeAttribute('src');
+        bgvid.style.display='none';
+      }
+    })();
+
+    // Simple Carousel
+    (function(){
+      const track = document.getElementById('carouselTrack');
+      if(!track) return;
+      const slides = Array.from(track.children);
+      const prev = document.getElementById('carPrev');
+      const next = document.getElementById('carNext');
+      const dotsC = document.getElementById('carDots');
+      let idx = 0, timer = null;
+
+      slides.forEach((_,i)=>{
+        const b=document.createElement('button');
+        b.addEventListener('click', ()=>go(i));
+        dotsC.appendChild(b);
+      });
+
+      function mark(){ [...dotsC.children].forEach((d,i)=>d.classList.toggle('active', i===idx)); }
+      function go(i){ idx = (i+slides.length)%slides.length; track.style.transform = `translateX(-${idx*100}%)`; mark(); }
+      function nextSlide(){ go(idx+1); }
+
+      function start(){
+        const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(prefersReduced || timer) return;
+        timer = setInterval(nextSlide, 3500);
+      }
+      function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+
+      prev?.addEventListener('click', ()=>{ stop(); go(idx-1); start(); });
+      next?.addEventListener('click', ()=>{ stop(); go(idx+1); start(); });
+
+      const wrap = track.parentElement;
+      wrap.addEventListener('mouseenter', stop);
+      wrap.addEventListener('mouseleave', start);
+
+      let x0=null;
+      wrap.addEventListener('touchstart', e=>{ x0 = e.touches[0].clientX; stop(); }, {passive:true});
+      wrap.addEventListener('touchend', e=>{
+        if(x0==null) return;
+        const dx = e.changedTouches[0].clientX - x0;
+        if(Math.abs(dx) > 40) (dx>0 ? go(idx-1) : go(idx+1));
+        x0=null; start();
+      });
+
+      if(document.body.classList.contains('show')) start();
+      else {
+        const mo = new MutationObserver(()=>{ 
+          if(document.body.classList.contains('show')){ start(); mo.disconnect(); }
+        });
+        mo.observe(document.body, {attributes:true, attributeFilter:['class']});
+      }
+      go(0);
+    })();
+  </script>
+</body>
+</html>
