@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HAMTOSHI — Samurai Hamster</title>
+  <meta name="description" content="Small paws. Big discipline. The samurai hamster memecoin — slice FUD, guard the village, join the dojo." />
+  <meta name="theme-color" content="#ff2e35" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --wrap:860px; --ink:#eef1f6; --muted:#9aa3ad; --accent:#ff2e35; --accent2:#43d9ff;
+      --card:rgba(255,255,255,.05); --ghost:rgba(255,255,255,.03); --border:rgba(255,255,255,.12);
+      --nav-pad: 14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{scroll-behavior:smooth}
+    body{margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:#000}
+    a{color:inherit; text-decoration:none}
+
+    .bg-col{position:fixed; inset:0; display:grid; place-items:center; pointer-events:none; z-index:0}
+    .bg-frame{position:relative; width:min(100%, var(--wrap)); height:100%}
+    .bg-img{position:absolute; inset:0; background:url('background.png') center/cover no-repeat;}
+    .bg-vid{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+    .shade{position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(0,0,0,.25), rgba(0,0,0,.7) 65%, rgba(0,0,0,.92) 100%)}
+
+    .wrap{position:relative; max-width:var(--wrap); margin:0 auto; padding:28px}
+
+    /* FIXED NAV (always on top) */
+    .site-nav{position:fixed; top:0; left:0; right:0; z-index:10000}
+    .site-nav .wrap{padding: var(--nav-pad) 28px}
+    .site-nav .inner{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; background:rgba(0,0,0,.35); border:1px solid var(--border); border-radius:14px; backdrop-filter:blur(8px)}
+    .brand{display:flex; align-items:center; gap:10px}
+    .brand img{width:32px; height:32px; border-radius:10px}
+    .chip{padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.05); color:var(--muted); font-weight:600}
+
+    /* push content below fixed nav */
+    main{padding-top: calc( (var(--nav-pad)*2) + 10px + 16px + 2px + 28px );}
+
+    .hero{padding:40px 0 24px; text-align:center}
+    .logo{width:min(36vw, 320px); height:auto; border-radius:26px; background:#000; padding:12px; box-shadow:0 18px 40px rgba(67,217,255,.28); margin:0 auto 12px}
+    h1{font-size:clamp(34px,5vw,56px); line-height:1.04; margin:12px 0 8px; font-weight:900}
+    .sub{color:var(--muted); font-size:clamp(14px,1.6vw,18px)}
+
+    .stack{margin:18px auto 0; width:min(720px,100%); display:grid; gap:12px}
+    .btn{display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 18px; border-radius:16px; border:1px solid var(--border); background:var(--card); font-weight:800}
+    .btn.primary{background:linear-gradient(90deg, var(--accent), #ff7b3d); border-color:transparent; box-shadow:0 14px 30px rgba(255,46,53,.35)}
+    .btn.glow{border-color:transparent; background:linear-gradient(90deg, var(--accent2), #7af3ff); box-shadow:0 12px 26px rgba(67,217,255,.36)}
+
+    .contract{margin:22px auto 0; width:min(720px,100%); display:flex; align-items:center; gap:10px; border:1px dashed var(--border); background:var(--ghost); border-radius:16px; padding:12px 14px}
+    .mono{font-family:ui-monospace, Menlo, Consolas, monospace}
+    .addr{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .copy{margin-left:auto; cursor:pointer; padding:10px 12px; border-radius:10px; border:1px dashed var(--border); color:var(--accent2); font-weight:800}
+
+    section{padding:20px 0}
+    .panel{margin:10px auto; width:min(860px,100%); background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px}
+    .panel h2{margin:0 0 8px; font-size:22px}
+    .muted{color:var(--muted)}
+
+    footer{padding:40px 0; color:var(--muted); text-align:center}
+    .chips{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+
+    body:not(.show) .hero .logo,
+    body:not(.show) h1,
+    body:not(.show) .sub,
+    body:not(.show) .stack,
+    body:not(.show) .contract,
+    body:not(.show) .panel{opacity:0; transform:translateY(6px)}
+    body.show .hero .logo,
+    body.show h1,
+    body.show .sub,
+    body.show .stack,
+    body.show .contract,
+    body.show .panel{opacity:1; transform:none; transition:opacity .45s ease, transform .45s ease}
+
+    .splash{position:fixed; inset:0; z-index:100000; display:grid; place-items:center; background:#000; transition:opacity .5s ease, visibility .5s ease}
+    .splash.hide{opacity:0; visibility:hidden; pointer-events:none}
+    .splash-inner{display:flex; flex-direction:column; align-items:center; gap:18px; text-align:center}
+    .splash-video{max-width:min(520px,90vw); border-radius:16px; box-shadow:0 18px 60px rgba(0,0,0,.6)}
+    .enter{cursor:pointer; padding:14px 18px; border-radius:999px; border:1px solid rgba(255,255,255,.15); background:linear-gradient(90deg,#ff2e35,#ff7b3d); color:#fff; font-weight:900}
+
+    /* Tier grid */
+    .tier-grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:14px}
+    .tier{position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:var(--card); transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease}
+    .tier img{width:100%; height:auto; display:block; aspect-ratio:1/1; object-fit:cover; background:#0b0b0e}
+    .tier-badge{position:absolute; left:10px; bottom:10px; padding:6px 10px; border-radius:999px; font-weight:800; font-size:12px; letter-spacing:.2px; color:#fff; background:rgba(0,0,0,.55); border:1px solid var(--border); backdrop-filter: blur(6px)}
+    .tier:hover{transform:translateY(-2px); border-color:rgba(67,217,255,.55); box-shadow:0 12px 28px rgba(67,217,255,.18)}
+
+    @media (max-width: 1024px){ .tier-grid{ grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 860px){
+      :root{ --wrap:92vw }
+      .site-nav .wrap{ padding: var(--nav-pad) 16px }
+      .nav .inner{ padding:8px 12px }
+      .chip{ font-size:12px; padding:8px 10px }
+      .logo{ width:min(58vw, 280px); border-radius:22px; padding:10px }
+      h1{ font-size:clamp(26px, 6vw, 40px) }
+      .sub{ font-size:clamp(13px, 3.8vw, 16px) }
+      .stack{ gap:10px }
+      .btn{ padding:14px 16px; border-radius:14px }
+      .contract{ padding:10px 12px; border-radius:14px }
+      .contract .addr{ font-size:12px; max-width:58vw }
+      .copy{ padding:9px 12px }
+      .panel{ padding:16px }
+      .bg-frame{ width:100% }
+      .splash-video{ max-width:92vw }
+      .tier-grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px){ .tier-grid{ grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <!-- SPLASH -->
+  <div id="splash" class="splash" role="dialog" aria-modal="true" aria-label="Welcome">
+    <div class="splash-inner">
+      <video id="intro" class="splash-video" style="display:none" playsinline muted preload="auto"></video>
+      <button id="enter" class="enter">Enter Dojo</button>
+    </div>
+  </div>
+
+  <!-- Background -->
+  <div class="bg-col" aria-hidden="true">
+    <div class="bg-frame">
+      <div class="bg-img"></div>
+      <video id="bgvid" class="bg-vid" src="background.mp4" poster="background.png" autoplay muted loop playsinline></video>
+      <div class="shade"></div>
+    </div>
+  </div>
+
+  <!-- FIXED NAV -->
+  <header class="site-nav">
+    <div class="wrap nav">
+      <div class="inner">
+        <div class="brand">
+          <img src="hamtoshi-head.png" alt="Hamtoshi" />
+          <b>HAMTOSHI</b>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="chip" href="#tokenomics">Tokenomics</a>
+          <a class="chip" href="#lore">Lore</a>
+          <a class="chip" href="#nft-utility">Mint</a>
+          <a class="chip" href="#faq">FAQ</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <header class="wrap hero" id="top">
+      <img class="logo" src="hamtoshi-full.png" alt="Hamtoshi full" />
+      <div class="contract mono" style="margin-top:14px">
+        <span>Contract</span>
+        <span id="addr" class="addr">0x19a8acf61f9994691144623a6324726610bc1218</span>
+        <button id="copy" class="copy">Copy</button>
+      </div>
+      <h1>Small paws. Big discipline.</h1>
+      <p class="sub">The samurai hamster of crypto. Slice FUD. Guard the village. Join the dojo.</p>
+
+      <div class="stack">
+        <a id="buy"   class="btn primary" href="#" target="_blank" rel="noopener noreferrer">Buy on PulseX</a>
+        <a id="chart" class="btn glow"    href="#" target="_blank" rel="noopener noreferrer">View Chart</a>
+        <a id="tg"    class="btn"         href="#" target="_blank" rel="noopener noreferrer">Telegram</a>
+        <a id="x"     class="btn"         href="#" target="_blank" rel="noopener noreferrer">X / Twitter</a>
+      </div>
+    </header>
+
+    <!-- LORE -->
+    <section id="lore" class="wrap">
+      <div class="panel">
+        <h2>Code of the Wheel-Samurai</h2>
+        <p class="muted">
+          Born in the Dojo of the Spinning Wheel, Hamtoshi trained under quiet moons to master Bushido for the modern battlefield: the markets.<br>
+          He learned to cut through noise with a single strike and to wait—paw steady—until the perfect entry.<br>
+          When the red moon rose, he took an oath to defend small holders and hunt dishonour on the chain.
+        </p>
+      </div>
+    </section>
+
+    <!-- TOKENOMICS -->
+    <section id="tokenomics" class="wrap">
+      <div class="panel">
+        <h2>Tokenomics</h2>
+        <ul class="muted">
+          <li><b>Hamtoshi was self-bonded on pump.tires</b></li>
+          <li><b>Total Supply</b>: <span class="mono">1,000,000,000 $HAM</span></li>
+          <li><b>80% of coins have been locked</b></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- WHAT DO HAMTOSHI NFTs DO (includes tier grid & stake button) -->
+    <section id="nft-utility" class="wrap">
+      <div class="panel">
+        <h2>Hamtoshi NFTs</h2>
+        <p class="muted">
+          Four tiers, on-chain burn on mint, and staking rewards via Nexion Farms.
+        </p>
+
+        <!-- Tiers & pricing -->
+        <div class="muted" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+          <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--ghost)">
+            <b>Common</b> — <span class="mono">x40</span><br>
+            Price: <span class="mono">625,000 HAM</span>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--ghost)">
+            <b>Rare</b> — <span class="mono">x20</span><br>
+            Price: <span class="mono">1,250,000 HAM</span>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--ghost)">
+            <b>Legendary</b> — <span class="mono">x10</span><br>
+            Price: <span class="mono">2,500,000 HAM</span>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--ghost)">
+            <b>Mythical</b> — <span class="mono">x5</span><br>
+            Price: <span class="mono">5,000,000 HAM</span>
+          </div>
+        </div>
+
+        <ul class="muted" style="margin:16px 0 0">
+          <li><b>Auto-Burn:</b> 100% of HAM used to mint is <b>burned</b> (removed from supply).</li>
+          <li><b>Stake to Earn:</b> Stake NFTs in
+            <a href="https://nexionpulse.com/Flux" target="_blank" rel="noopener">Nexion Farms</a>
+            to earn <b>HAM</b> rewards.</li>
+          <li><b>Monthly Top-Ups:</b> Reward pools are topped up each month from the gradual HAM unlock.</li>
+          <li><b>If all 75 mint:</b> → total HAM burned: 100,000,000 HAM.</li>
+        </ul>
+
+        <!-- Choose Tier INSIDE this panel -->
+        <h3 style="margin:18px 0 10px">Choose Your Tier</h3>
+        <div class="tier-grid">
+  <a class="tier" href="https://common-hamtoshi.nfts2.me/"   target="_blank" rel="noopener" data-tier="Common">
+    <img src="Common.png" alt="Hamtoshi — Common Tier">
+    <span class="tier-badge">Common</span>
+  </a>
+
+  <a class="tier" href="https://rare-hamtoshi.nfts2.me/"     target="_blank" rel="noopener" data-tier="Rare">
+    <img src="Rare.png" alt="Hamtoshi — Rare Tier">
+    <span class="tier-badge">Rare</span>
+  </a>
+
+  <a class="tier" href="https://legendary-hamtoshi.nfts2.me/" target="_blank" rel="noopener" data-tier="Legendary">
+    <img src="Legendary.png" alt="Hamtoshi — Legendary Tier">
+    <span class="tier-badge">Legendary</span>
+  </a>
+
+  <a class="tier" href="https://mythical-hamtoshi.nfts2.me/"  target="_blank" rel="noopener" data-tier="Mythical">
+    <img src="Mythical.png" alt="Hamtoshi — Mythical Tier">
+    <span class="tier-badge">Mythical</span>
+  </a>
+</div>
+
+
+        <!-- Only the Stake button remains -->
+        <div class="stack" style="margin-top:16px">
+          <a class="btn glow" href="https://nexionpulse.com/Flux" target="_blank" rel="noopener">Stake on Nexion</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="wrap">
+      <div class="panel">
+        <h2>FAQ</h2>
+        <div class="muted">
+          <p><b>What is Hamtoshi?</b><br>
+          The samurai hamster of crypto. Tiny paws, big discipline. He slices FUD, guards holders, and squeaks “wagmi” at the red moon.</p>
+
+          <p><b>How do I buy?</b><br>
+          Grab some ETH on Base, open Uniswap, paste the contract, swap, and keep a little ETH for gas. Boom—you now own a pocket-sized sensei. (Meditation optional, diamond paws encouraged.)</p>
+
+          <p><b>Is this financial advice?</b><br>
+          Nah. Hamtoshi can cut through noise, not your risk profile. Do your own research, pet your inner hamster, and only bet what your snack budget can handle.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="wrap">
+      <div class="chips">
+        <a class="link-pill" href="https://t.me/TheWheelSamurai" target="_blank" rel="noopener noreferrer"><img src="./TG.png" alt="Telegram"></a>
+        <a class="link-pill" href="https://dexscreener.com/pulsechain/0x1b4fb2f27eba19f01cfb51386b5b8551cb6f8c0c" target="_blank" rel="noopener noreferrer"><img src="./DS.png" alt="Dexscreener"></a>
+        <a class="link-pill" href="https://x.com/TheWheelSamurai" target="_blank" rel="noopener noreferrer"><img src="./X.png" alt="X"></a>
+        <a class="link-pill" href="https://pulsex.mypinata.cloud/ipfs/bafybeiajyhfbf6evh4mdabassmbtsy73ci2gmcgh4ffmjkrgsea35vqxba/#/?inputCurrency=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&outputCurrency=0x19a8acf61f9994691144623a6324726610bc1218" target="_blank" rel="noopener noreferrer"><img src="./PLSX.png" alt="PulseX"></a>
+      </div>
+      <p style="margin-top:12px">© <span id="year"></span> Hamtoshi. All vibes reserved. 🐹⚔️</p>
+    </footer>
+  </main>
+
+  <script>
+    // External links for buttons
+    const LINKS = {
+      buy: 'https://pulsex.mypinata.cloud/ipfs/bafybeiajyhfbf6evh4mdabassmbtsy73ci2gmcgh4ffmjkrgsea35vqxba/#/?inputCurrency=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&outputCurrency=0x19a8acf61f9994691144623a6324726610bc1218',
+      chart: 'https://dexscreener.com/pulsechain/0x1b4fb2f27eba19f01cfb51386b5b8551cb6f8c0c',
+      telegram: 'https://t.me/TheWheelSamurai',
+      twitter: 'https://x.com/TheWheelSamurai'
+    };
+    const $ = (id)=>document.getElementById(id);
+    const set = (id,url)=>{ const el=$(id); if(el && url) el.href=url };
+    set('buy', LINKS.buy); set('chart', LINKS.chart);
+    set('tg', LINKS.telegram); set('x', LINKS.twitter);
+    const yr = document.getElementById('year'); if(yr) yr.textContent = new Date().getFullYear();
+
+    // Copy contract
+    const copyBtn = $('copy');
+    copyBtn?.addEventListener('click', async ()=>{
+      const text = $('addr').innerText.trim();
+      try{ await navigator.clipboard.writeText(text) }catch(e){
+        const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      const old=copyBtn.textContent; copyBtn.textContent='Copied! ✅'; copyBtn.style.borderColor='var(--accent2)';
+      setTimeout(()=>{ copyBtn.textContent=old; copyBtn.style.borderColor='var(--border)'; }, 1400);
+    });
+
+    // Splash flow
+    (function(){
+      const splash = $('splash'), btn = $('enter'), intro = $('intro'), bgvid = $('bgvid');
+      function openSite(){ splash.classList.add('hide'); document.body.classList.add('show'); bgvid?.play?.().catch(()=>{}); }
+      btn?.addEventListener('click', async ()=>{
+        btn.style.display='none';
+        intro.src='load.mp4'; intro.style.display='block'; intro.currentTime=0; intro.muted=true; intro.setAttribute('playsinline','');
+        intro.addEventListener('ended', openSite, { once:true });
+        try{ await intro.play(); }catch(e){ intro.addEventListener('click', async ()=>{ try{ await intro.play(); }catch(_){} }, { once:true }); }
+      });
+    })();
+
+    // Smooth scroll with offset for fixed nav
+    (function(){
+      const header = document.querySelector('.site-nav');
+      const offset = ()=> (header?.offsetHeight || 0) + 12;
+      document.querySelectorAll('a[href^="#"]').forEach(a=>{
+        a.addEventListener('click', e=>{
+          const id = a.getAttribute('href');
+          if(!id || id === '#') return;
+          const el = document.querySelector(id);
+          if(!el) return;
+          e.preventDefault();
+          const top = el.getBoundingClientRect().top + window.scrollY - offset();
+          window.scrollTo({ top, behavior:'smooth' });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
